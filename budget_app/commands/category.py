@@ -26,6 +26,11 @@ def register(subparsers: argparse._SubParsersAction, common: argparse.ArgumentPa
     p_rm.add_argument("name", help="삭제할 카테고리명")
     p_rm.set_defaults(handler=category_remove)
 
+    p_rn = sub.add_parser("rename", help="[보너스] 카테고리 이름 변경 (거래 내역도 함께 변경)", parents=[common])
+    p_rn.add_argument("old", help="기존 이름")
+    p_rn.add_argument("new", help="새 이름")
+    p_rn.set_defaults(handler=category_rename)
+
 
 @command
 def category_add(ctx: AppContext, args: argparse.Namespace) -> int:
@@ -52,8 +57,17 @@ def category_remove(ctx: AppContext, args: argparse.Namespace) -> int:
     if used:
         raise ValidationError(
             f"'{name}' 카테고리를 사용 중인 거래가 {used}건 있어 삭제할 수 없습니다.",
-            f"해당 거래를 수정/삭제하거나 'category rename {name} <새이름>' 을 사용하세요.",
+            f"해당 거래를 수정/삭제하거나 'category rename {name} <새이름>' 으로 이름을 바꾸세요.",
         )
     ctx.categories.remove(name)
     print(f"[삭제 완료] category={name}")
+    return EXIT_OK
+
+
+@command
+def category_rename(ctx: AppContext, args: argparse.Namespace) -> int:
+    old = ctx.categories.require(args.old)
+    new = ctx.categories.rename(old, args.new)
+    changed = ctx.transactions.rename_category(old, new)
+    print(f"[변경 완료] {old} -> {new} (거래 {changed}건 함께 변경)")
     return EXIT_OK
