@@ -9,13 +9,13 @@ import argparse
 from pathlib import Path
 from typing import Sequence
 
-from budget_app.commands import add, category, listing, modify, search
+from budget_app.commands import add, category, listing, modify, report, search
 from budget_app.context import AppContext
 from budget_app.decorators import EXIT_OK, handle_errors
 
 DEFAULT_DATA_DIR = Path("data")
 
-COMMAND_MODULES = [add, listing, search, modify, category]
+COMMAND_MODULES = [add, listing, search, modify, report, category]
 
 
 def build_parser() -> argparse.ArgumentParser:

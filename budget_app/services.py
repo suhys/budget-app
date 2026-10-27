@@ -41,3 +41,47 @@ class SearchFilter:
 def filter_transactions(transactions: Iterable[Transaction], flt: SearchFilter) -> Iterator[Transaction]:
     """조건에 맞는 거래만 통과시키는 제너레이터 (필터 체인)."""
     return (tx for tx in transactions if flt.matches(tx))
+
+
+# ---------- 월별 요약 ----------
+
+BUDGET_WARN_RATIO = 0.8  # 사용률 80% 이상이면 주의, 100% 초과면 경고
+
+
+@dataclass(frozen=True)
+class MonthlySummary:
+    month: str
+    income: int
+    expense: int
+    count: int
+    top_categories: list[tuple[str, int]]
+    budget: int | None
+
+    @property
+    def balance(self) -> int:
+        return self.income - self.expense
+
+    @property
+    def usage_ratio(self) -> float | None:
+        if not self.budget:
+            return None
+        return self.expense / self.budget
+
+
+def monthly_summary(
+    transactions: Iterable[Transaction], month: str, top: int, budget: int | None
+) -> MonthlySummary:
+    """한 번의 순회(스트리밍)로 수입/지출 합계와 카테고리별 지출을 동시에 집계한다."""
+    income = expense = count = 0
+    by_category: dict[str, int] = {}
+    for tx in transactions:
+        if tx.month != month:
+            continue
+        count += 1
+        if tx.type == "income":
+            income += tx.amount
+        else:
+            expense += tx.amount
+            by_category[tx.category] = by_category.get(tx.category, 0) + tx.amount
+    ranked = sorted(by_category.items(), key=lambda item: item[1], reverse=True)[:top]
+    return MonthlySummary(month, income, expense, count, ranked, budget)
