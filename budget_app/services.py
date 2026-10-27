@@ -85,3 +85,20 @@ def monthly_summary(
             by_category[tx.category] = by_category.get(tx.category, 0) + tx.amount
     ranked = sorted(by_category.items(), key=lambda item: item[1], reverse=True)[:top]
     return MonthlySummary(month, income, expense, count, ranked, budget)
+
+
+# ---------- CSV 가져오기/내보내기 ----------
+
+CSV_COLUMNS: tuple[str, ...] = ("date", "type", "category", "amount", "memo", "tags")
+REQUIRED_COLUMNS: tuple[str, ...] = ("date", "type", "category", "amount")
+
+
+def to_csv_row(tx: Transaction) -> dict[str, str]:
+    return {
+        "date": tx.date,
+        "type": tx.type,
+        "category": tx.category,
+        "amount": str(tx.amount),
+        "memo": tx.memo,
+        "tags": ",".join(tx.tags),
+    }
