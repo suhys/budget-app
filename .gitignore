@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+data/
+*.csv
+!samples/*.csv
+.vscode/
+.DS_Store
